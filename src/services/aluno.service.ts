@@ -2,6 +2,23 @@ import { prisma } from '../config/database';
 import { ApiError } from '../utils/apiError';
 import { UpdateAlunoInput } from '../schemas/aluno.schema';
 
+
+export const getAlunoService = async (userId:string) => {
+
+
+  return await prisma.aluno.findFirst({
+    where: { id:userId },
+    select: {
+      id: true,
+      nome: true,
+      email: true,
+      telefone: true,
+      dataNascimento: true,
+      createdAt: true
+    }
+  });
+};
+
 export const getAlunoByIdService = async (id: string, userId: string, tipo: 'coach' | 'aluno') => {
   const aluno = await prisma.aluno.findUnique({
     where: { id },
@@ -11,6 +28,7 @@ export const getAlunoByIdService = async (id: string, userId: string, tipo: 'coa
       email: true,
       telefone: true,
       dataNascimento: true,
+      diaFeedback: true,
       coachId: true,
       coach: {
         select: {
@@ -43,7 +61,7 @@ export const getAlunoByIdService = async (id: string, userId: string, tipo: 'coa
   return aluno;
 };
 
-export const getAlunosByCoachService = async (coachId: string, userId: string, tipo: 'coach' | 'aluno') => {
+export const getAlunosByCoachService = async (coachId: string, userId: string, tipo: 'coach' | 'aluno', options?:any) => {
   if (tipo === 'coach' && coachId !== userId) {
     throw new ApiError(403, 'Acesso não autorizado');
   }

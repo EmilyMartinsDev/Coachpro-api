@@ -20,6 +20,7 @@ model Coach {
   alunos         Aluno[]
   planosTreino   PlanoTreino[]
   planosAlimentar PlanoAlimentar[]
+  planos Plano[]
 }
 
 model Aluno {
@@ -29,6 +30,7 @@ model Aluno {
   senha          String
   telefone       String
   dataNascimento DateTime
+  diaFeedback   String
   coachId        String
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -49,6 +51,8 @@ model Plano {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   assinaturas Assinatura[]
+  coachId String
+  coach         Coach    @relation(fields: [coachId], references: [id])
 }
 
 model Assinatura {
@@ -61,7 +65,7 @@ model Assinatura {
   valor                Float
   parcela              Int          @default(0)
   totalParcelas        Int
-  comprovante_pagamento Bytes?
+ comprovante_url      String?      // URL do arquivo no Supabase
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
   aluno                Aluno        @relation(fields: [alunoId], references: [id])
@@ -73,7 +77,7 @@ model PlanoTreino {
   id            String   @id @default(uuid())
   titulo        String
   descricao     String?
-  caminhoArquivo String
+  arquivo_url   String?  // URL do arquivo no Supabase
   alunoId       String
   coachId       String
   createdAt     DateTime @default(now())
@@ -86,7 +90,7 @@ model PlanoAlimentar {
   id            String   @id @default(uuid())
   titulo        String
   descricao     String?
-  caminhoArquivo String
+ arquivo_url   String?  // URL do arquivo no Supabase
   alunoId       String
   coachId       String
   createdAt     DateTime @default(now())
@@ -124,7 +128,7 @@ model Feedback {
 model FotoFeedback {
   id         String   @id @default(uuid())
   feedbackId String
-  data       Bytes? // arquivo binário
+ url        String?  // URL da foto no Supabase
   createdAt  DateTime @default(now())
   feedback   Feedback @relation(fields: [feedbackId], references: [id])
 }

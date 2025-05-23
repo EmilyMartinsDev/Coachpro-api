@@ -185,108 +185,185 @@ API RESTful para gerenciamento de coaches, alunos, planos, assinaturas, pagament
 ```
 
 ### Plano de Treino
-- `GET /api/treinos/aluno/:alunoId` — Planos de treino do aluno
-```json
-[
-  {
-    "id": "<uuid>",
-    "titulo": "Treino ABC",
-    "descricao": "Treino para hipertrofia",
-    "caminhoArquivo": "https://meusite.com/treinos/treinoabc.pdf",
-    "createdAt": "2025-05-20T12:00:00.000Z",
-    "updatedAt": "2025-05-20T12:00:00.000Z",
-    "coach": { "id": "<uuid>", "nome": "Coach Teste" }
-  }
-]
+
+- `GET /api/planos-treino/` — Lista todos os planos de treino do usuário (coach vê todos que criou, aluno vê os seus)
+- `GET /api/planos-treino/:id` — Detalhe de um plano de treino
+- `POST /api/planos-treino/` — Cria um novo plano de treino (coach, envia PDF como arquivo)
+- `GET /api/planos-treino/aluno/:alunoId` — Lista planos de treino de um aluno específico
+- `GET /api/planos-treino/download/:id` — Download do PDF do plano de treino (blob)
+
+**Exemplo de envio de PDF (JavaScript/React):**
+```js
+const formData = new FormData();
+formData.append('arquivo', file); // file: File (PDF)
+formData.append('alunoId', 'uuid-do-aluno');
+formData.append('titulo', 'Treino A');
+formData.append('descricao', 'Treino para membros superiores');
+
+await fetch('/api/planos-treino/', {
+  method: 'POST',
+  headers: { Authorization: 'Bearer <token>' },
+  body: formData
+});
 ```
 
-### Plano Alimentar
-- `GET /api/alimentares/aluno/:alunoId` — Planos alimentares do aluno
-```json
-[
-  {
-    "id": "<uuid>",
-    "titulo": "Plano Alimentar 1",
-    "descricao": "Plano para bulking",
-    "caminhoArquivo": "https://meusite.com/alimentares/plano1.pdf",
-    "createdAt": "2025-05-20T12:00:00.000Z",
-    "updatedAt": "2025-05-20T12:00:00.000Z",
-    "coach": { "id": "<uuid>", "nome": "Coach Teste" }
-  }
-]
+**Exemplo de download (JavaScript/React):**
+```js
+fetch('/api/planos-treino/download/123', {
+  headers: { Authorization: 'Bearer <token>' }
+})
+  .then(res => res.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob);
+    window.open(url);
+  });
 ```
 
-### Fotos do Feedback
-- `POST /api/feedbacks/:feedbackId/photos` — Faz upload de uma foto para um feedback
+---
 
-**Body (form-data):**
-- `foto`: arquivo de imagem (campo obrigatório)
+## Plano Alimentar
 
-**Resposta de sucesso:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "<uuid>",
-    "feedbackId": "<uuid>",
-    "url": "/uploads/nome-do-arquivo.jpg",
-    "createdAt": "2025-05-20T12:00:00.000Z"
-  }
-}
+- `GET /api/planos-alimentares/` — Lista todos os planos alimentares do usuário
+- `GET /api/planos-alimentares/:id` — Detalhe de um plano alimentar
+- `POST /api/planos-alimentares/` — Cria um novo plano alimentar (coach, envia PDF como arquivo)
+- `GET /api/planos-alimentares/aluno/:alunoId` — Lista planos alimentares de um aluno específico
+- `GET /api/planos-alimentares/download/:id` — Download do PDF do plano alimentar (blob)
+
+**Exemplo de envio de PDF (JavaScript/React):**
+```js
+const formData = new FormData();
+formData.append('arquivo', file); // file: File (PDF)
+formData.append('alunoId', 'uuid-do-aluno');
+formData.append('titulo', 'Plano Alimentar Maio');
+formData.append('descricao', 'Plano alimentar personalizado');
+
+await fetch('/api/planos-alimentares/', {
+  method: 'POST',
+  headers: { Authorization: 'Bearer <token>' },
+  body: formData
+});
 ```
+
+**Exemplo de download (JavaScript/React):**
+```js
+fetch('/api/planos-alimentares/download/123', {
+  headers: { Authorization: 'Bearer <token>' }
+})
+  .then(res => res.blob())
+  .then(blob => {
+    const url = window.URL.createObjectURL(blob);
+    window.open(url);
+  });
+```
+
+---
+
+## Fotos de Feedback
+
+- `POST /api/feedbacks/:feedbackId/photos` — Envia uma foto (imagem) para um feedback (campo: `file`)
+- `GET /api/feedbacks/download/:fotoId` — Download da imagem do feedback (blob)
+
+**Exemplo de envio de foto:**
+```http
+POST /api/feedbacks/<feedbackId>/photos
+Content-Type: multipart/form-data
+
+// FormData:
+// file: <imagem.jpg>
+```
+
+**Exemplo de download:**
+```http
+GET /api/feedbacks/download/<fotoId>
+```
+
+---
+
+## Assinaturas
+
+- `POST /api/assinaturas/` — Cria assinatura (pode enviar comprovante como arquivo binário)
+- `PUT /api/assinaturas/:id` — Atualiza assinatura (pode enviar comprovante como arquivo binário)
+- `GET /api/assinaturas/download-comprovante/:assinaturaId` — Download do comprovante de pagamento (blob)
+
+**Exemplo de envio de comprovante:**
+```http
+POST /api/assinaturas/
+Content-Type: multipart/form-data
+
+// FormData:
+// alunoId: "<uuid>"
+// planoId: "<uuid>"
+// dataInicio: "2025-05-19"
+// dataFim: "2025-07-19"
+// valor: 600
+// status: "PENDENTE_APROVACAO"
+// parcela: 1
+// total_parcelas: 2
+// comprovante_pagamento: <arquivo.pdf ou imagem>
+```
+
+**Exemplo de download:**
+```http
+GET /api/assinaturas/download-comprovante/<assinaturaId>
+```
+
+---
+
+Para todos os endpoints de upload, envie arquivos como `FormData` com o campo correto (veja exemplos acima). Para download, basta acessar o endpoint e o arquivo será retornado como blob.
+
+Consulte o restante do README para exemplos de payloads e autenticação.
 
 ### Exemplo de resposta para `GET /api/alunos/:id`
 ```json
 {
-    "success": true,
-    "data": {
-        "id": "5692d4a0-93df-4658-9320-c3985b5f1abb",
-        "nome": "emilyAluno",
-        "email": "emily@teste.com",
-        "telefone": "31985984616",
-        "dataNascimento": "2005-04-01T00:00:00.000Z",
-        "coachId": "f59bf16c-ec94-4fca-8992-713b2580201d",
-        "coach": {
-            "id": "f59bf16c-ec94-4fca-8992-713b2580201d",
-            "nome": "emily",
-            "email": "emily@teste.com"
-        },
-        "feedbacks": [],
-        "assinaturas": [
-            {
-                "id": "f15bfde7-be29-4f98-b8bc-b5faac4b1015",
-                "alunoId": "5692d4a0-93df-4658-9320-c3985b5f1abb",
-                "planoId": "ce8f9c63-5845-46f5-a391-861d14d8f9bf",
-                "status": "ATIVA",
-                "dataInicio": "2025-05-19T00:00:00.000Z",
-                "dataFim": "2025-06-19T00:00:00.000Z",
-                "valor": 320,
-                "parcela": 1,
-                "totalParcelas": 2,
-                "comprovante_pagamento": "https://meusite.com/comprovantes/12345.png",
-                "createdAt": "2025-05-19T23:42:58.523Z",
-                "updatedAt": "2025-05-19T23:42:58.523Z"
-            },
-            {
-                "id": "2adc7ce4-acd8-42ea-b77c-644ace4b9e91",
-                "alunoId": "5692d4a0-93df-4658-9320-c3985b5f1abb",
-                "planoId": "ce8f9c63-5845-46f5-a391-861d14d8f9bf",
-                "status": "PENDENTE",
-                "dataInicio": "2025-06-20T00:00:00.000Z",
-                "dataFim": "2025-07-20T00:00:00.000Z",
-                "valor": 320,
-                "parcela": 2,
-                "totalParcelas": 2,
-                "comprovante_pagamento": null,
-                "createdAt": "2025-05-19T23:45:37.066Z",
-                "updatedAt": "2025-05-19T23:53:30.788Z"
-            }
-        ],
-        "planosAlimentar": [],
-        "planosTreino": [],
-        "createdAt": "2025-05-19T21:15:07.031Z",
-        "anamnese": null
-    }
+  "success": true,
+  "data": {
+    "id": "5692d4a0-93df-4658-9320-c3985b5f1abb",
+    "nome": "emilyAluno",
+    "email": "emily@teste.com",
+    "telefone": "31985984616",
+    "dataNascimento": "2005-04-01T00:00:00.000Z",
+    "coachId": "f59bf16c-ec94-4fca-8992-713b2580201d",
+    "coach": {
+      "id": "f59bf16c-ec94-4fca-8992-713b2580201d",
+      "nome": "emily",
+      "email": "emily@teste.com"
+    },
+    "feedbacks": [],
+    "assinaturas": [
+      {
+        "id": "f15bfde7-be29-4f98-b8bc-b5faac4b1015",
+        "alunoId": "5692d4a0-93df-4658-9320-c3985b5f1abb",
+        "planoId": "ce8f9c63-5845-46f5-a391-861d14d8f9bf",
+        "status": "ATIVA",
+        "dataInicio": "2025-05-19T00:00:00.000Z",
+        "dataFim": "2025-06-19T00:00:00.000Z",
+        "valor": 320,
+        "parcela": 1,
+        "totalParcelas": 2,
+        "comprovante_pagamento": "https://meusite.com/comprovantes/12345.png",
+        "createdAt": "2025-05-19T23:42:58.523Z",
+        "updatedAt": "2025-05-19T23:42:58.523Z"
+      },
+      {
+        "id": "2adc7ce4-acd8-42ea-b77c-644ace4b9e91",
+        "alunoId": "5692d4a0-93df-4658-9320-c3985b5f1abb",
+        "planoId": "ce8f9c63-5845-46f5-a391-861d14d8f9bf",
+        "status": "PENDENTE",
+        "dataInicio": "2025-06-20T00:00:00.000Z",
+        "dataFim": "2025-07-20T00:00:00.000Z",
+        "valor": 320,
+        "parcela": 2,
+        "totalParcelas": 2,
+        "comprovante_pagamento": null,
+        "createdAt": "2025-05-19T23:45:37.066Z",
+        "updatedAt": "2025-05-19T23:53:30.788Z"
+      }
+    ],
+    "planosAlimentar": [],
+    "planosTreino": [],
+    "createdAt": "2025-05-19T21:15:07.031Z"
+  }
 }
 ```
 

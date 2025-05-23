@@ -12,7 +12,7 @@ import { validate } from '../middlewares/validate.middleware';
 import { createPlanoSchema, updatePlanoSchema } from '../schemas/plano.schema';
 
 export const getAllPlanos = async (req: Request, res: Response) => {
-  const planos = await getAllPlanosService();
+  const planos = await getAllPlanosService(req.user!.id, req.user!.tipo);
   const response = new ApiResponse(planos);
   res.status(200).json(response);
 };

@@ -1,7 +1,7 @@
 import { prisma } from '../config/database';
 import { ApiError } from '../utils/apiError';
 import { CreateAssinaturaInput, UpdateAssinaturaInput } from '../schemas/assinatura.schema';
-import { stat } from 'fs';
+import { uploadFileToSupabase, deleteFileFromSupabase } from './supabase.service';
 
 export const getAllAssinaturasService = async (userId: string, tipo: 'coach' | 'aluno') => {
     if (tipo === 'coach') {
@@ -77,7 +77,6 @@ export const getAssinaturaByIdService = async (id: string, userId: string, tipo:
 
     return assinatura;
 };
-
 export const createAssinaturaService = async (input: CreateAssinaturaInput, userId: string, tipo: 'coach' | 'aluno') => {
     const { alunoId, planoId } = input;
 
@@ -103,6 +102,22 @@ export const createAssinaturaService = async (input: CreateAssinaturaInput, user
     }
 
     const dataFim = new Date(input.dataFim);
+    let comprovanteUrl: string | null = null;
+    console.log(input)
+    if (input.comprovante_url) {
+           console.log(input)
+        const buffer = Buffer.from(input.comprovante_url, 'base64')
+
+        const file = {
+            buffer,
+            originalname: `comprovante-${Date.now()}.jpg`,
+            mimetype: 'image/jpeg'
+        }
+   console.log(input)
+        comprovanteUrl = await uploadFileToSupabase(file, 'comprovantes')
+    } else if (typeof input.comprovante_url === 'string') {
+        comprovanteUrl = input.comprovante_url;
+    }
 
     return await prisma.assinatura.create({
         data: {
@@ -112,8 +127,7 @@ export const createAssinaturaService = async (input: CreateAssinaturaInput, user
             dataInicio: new Date(input.dataInicio),
             dataFim,
             valor: input.valor,
-            // Se comprovante_pagamento for enviado como arquivo (buffer), salve como blob
-            comprovante_pagamento: input.comprovante_pagamento instanceof Buffer ? input.comprovante_pagamento : undefined,
+            comprovante_url: comprovanteUrl,
             parcela: input.parcela,
             totalParcelas: input.total_parcelas,
         },
@@ -127,6 +141,7 @@ export const createAssinaturaService = async (input: CreateAssinaturaInput, user
         }
     });
 };
+
 
 export const getAssinaturasByAlunoService = async (alunoId: string, userId: string, tipo: 'coach' | 'aluno') => {
     if (tipo === 'aluno' && alunoId !== userId) {
@@ -221,7 +236,7 @@ export const getAssinaturasAguardandoAprovacaoService = async (userId: string, t
                         titulo: true
                     }
                 },
-            
+
             }
         });
     } else {
@@ -237,7 +252,7 @@ export const getAssinaturasAguardandoAprovacaoService = async (userId: string, t
                         titulo: true
                     }
                 },
-            
+
             }
         });
     }
@@ -344,14 +359,22 @@ export const updateAssinaturaStatus = async (
     if (tipo === 'aluno' && assinatura.alunoId !== userId) throw new ApiError(403, 'Acesso não autorizado');
     if (tipo === 'coach' && assinatura.aluno.coachId !== userId) throw new ApiError(403, 'Acesso não autorizado');
 
-    // Lógica de status e comprovante
     let status = assinatura.status;
-    let comprovante_pagamento = assinatura.comprovante_pagamento;
+    let comprovanteUrl = assinatura.comprovante_url;
 
     // Aluno envia comprovante
-    if (tipo === 'aluno' && updateAssinaturaSchema.comprovante_pagamento) {
+    if (tipo === 'aluno' && updateAssinaturaSchema.comprovante_url) {
+        if (comprovanteUrl) {
+            await deleteFileFromSupabase(comprovanteUrl, 'comprovantes');
+        }
+
+        const file = {
+            buffer: updateAssinaturaSchema.comprovante_url,
+            originalname: `comprovante-${Date.now()}.${'jpg'}`,
+            mimetype: 'image/jpeg'
+        };
+        comprovanteUrl = await uploadFileToSupabase(file, 'comprovantes');
         status = 'PENDENTE_APROVACAO';
-        comprovante_pagamento = updateAssinaturaSchema.comprovante_pagamento;
     }
 
     // Coach aprova
@@ -362,22 +385,54 @@ export const updateAssinaturaStatus = async (
     // Coach rejeita
     if (tipo === 'coach' && updateAssinaturaSchema.status === 'CANCELADA') {
         status = 'CANCELADA';
-        comprovante_pagamento = null;
-    }
-
-    // Cancelamento automático (expirou prazo e não tem comprovante)
-    if (updateAssinaturaSchema.status === 'CANCELADA' && !assinatura.comprovante_pagamento) {
-        status = 'CANCELADA';
+        if (comprovanteUrl) {
+            await deleteFileFromSupabase(comprovanteUrl, 'comprovantes');
+            comprovanteUrl = null;
+        }
     }
 
     const updatedAssinatura = await prisma.assinatura.update({
         where: { id: updateAssinaturaSchema.id },
         data: {
             status,
-            comprovante_pagamento,
+            comprovante_url: comprovanteUrl,
             parcela: updateAssinaturaSchema.parcela ?? assinatura.parcela
         }
     });
 
     return updatedAssinatura;
 }
+
+export const deleteAssinaturaService = async (id: string, userId: string, tipo: 'coach' | 'aluno') => {
+    const assinatura = await prisma.assinatura.findUnique({
+        where: { id },
+        include: {
+            aluno: {
+                select: {
+                    id: true,
+                    coachId: true
+                }
+            }
+        }
+    });
+
+    if (!assinatura) {
+        throw new ApiError(404, 'Assinatura não encontrada');
+    }
+
+    if (tipo === 'coach' && assinatura.aluno.coachId !== userId) {
+        throw new ApiError(403, 'Acesso não autorizado');
+    }
+
+    if (tipo === 'aluno' && assinatura.alunoId !== userId) {
+        throw new ApiError(403, 'Acesso não autorizado');
+    }
+
+    if (assinatura.comprovante_url) {
+        await deleteFileFromSupabase(assinatura.comprovante_url, 'comprovantes');
+    }
+
+    await prisma.assinatura.delete({ where: { id } });
+
+    return { success: true };
+};

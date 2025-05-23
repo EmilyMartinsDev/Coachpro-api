@@ -26,7 +26,27 @@ export const getCoachByIdService = async (id: string) => {
       telefone: true,
       dataNascimento: true,
       foto: true,
-      createdAt: true
+      createdAt: true,
+      planos: true,
+      alunos: {
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          telefone: true,
+          dataNascimento: true,
+          createdAt: true,
+          anamnese: true,
+          feedbacks: {
+            include:{
+fotos:true
+            }
+          },
+          planosAlimentar: true,
+          planosTreino: true,
+          assinaturas: true,
+        }
+      }
     }
   });
 

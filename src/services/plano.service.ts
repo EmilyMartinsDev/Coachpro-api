@@ -2,8 +2,13 @@ import { prisma } from '../config/database';
 import { ApiError } from '../utils/apiError';
 import { CreatePlanoInput, UpdatePlanoInput } from '../schemas/plano.schema';
 
-export const getAllPlanosService = async () => {
+export const getAllPlanosService = async (userId:string, tipo:string) => {
+
+  if(tipo == "coach"){
   return await prisma.plano.findMany({
+    where:{
+      coachId: userId,
+    },
     select: {
       id: true,
       titulo: true,
@@ -13,6 +18,36 @@ export const getAllPlanosService = async () => {
       createdAt: true
     }
   });
+  }
+  const aluno = await prisma.aluno.findFirst({
+    where:{
+      id: userId
+    },
+    select:{
+      coachId:true
+    }
+  })
+
+
+  if(!aluno){
+    throw new Error("Plano não encontrado para esse coach desse aluno")
+  }
+
+    return await prisma.plano.findMany({
+    where:{
+      coachId: aluno.coachId
+    },
+    select: {
+      id: true,
+      titulo: true,
+      descricao: true,
+      valor: true,
+      duracao: true,
+      createdAt: true
+    }
+  });
+
+
 };
 
 export const createPlanoService = async (input: CreatePlanoInput) => {
@@ -21,7 +56,8 @@ export const createPlanoService = async (input: CreatePlanoInput) => {
       titulo: input.titulo,
       descricao: input.descricao,
       valor: input.valor,
-      duracao: input.duracao
+      duracao: input.duracao,
+      coachId: input.coachId
     },
     select: {
       id: true,
@@ -34,7 +70,7 @@ export const createPlanoService = async (input: CreatePlanoInput) => {
   });
 };
 
-export const updatePlanoService = async (id: string, input: UpdatePlanoInput) => {
+export const updatePlanoService = async (id: string, input: UpdatePlanoInput, ) => {
   return await prisma.plano.update({
     where: { id },
     data: {
