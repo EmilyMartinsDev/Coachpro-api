@@ -45,31 +45,36 @@ model Aluno {
 model Plano {
   id          String       @id @default(uuid())
   titulo      String
-  descricao   String?
-  valor       Float
-  duracao     Int          // Duração em meses
+  descricao   String?     // Duração em meses
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  assinaturas Assinatura[]
   coachId String
   coach         Coach    @relation(fields: [coachId], references: [id])
+  parcelamento Parcelamento[]
+}
+
+model Parcelamento{
+   id          String       @id @default(uuid())
+  planoId String
+  valorParcela Float
+  quantidadeParcela Float
+    plano                Plano        @relation(fields: [planoId], references: [id])
+    assinaturas Assinatura[]
 }
 
 model Assinatura {
   id                   String       @id @default(uuid())
   alunoId              String
-  planoId              String
+  parcelamentoId String
   status               StatusAssinatura
-  dataInicio           DateTime
-  dataFim              DateTime
-  valor                Float
+  dataInicio           DateTime?
+  dataFim              DateTime?
   parcela              Int          @default(0)
-  totalParcelas        Int
  comprovante_url      String?      // URL do arquivo no Supabase
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
   aluno                Aluno        @relation(fields: [alunoId], references: [id])
-  plano                Plano        @relation(fields: [planoId], references: [id])
+  parcelamento                Parcelamento        @relation(fields: [parcelamentoId], references: [id])
 }
 
 
