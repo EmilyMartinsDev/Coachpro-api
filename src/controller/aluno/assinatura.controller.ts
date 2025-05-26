@@ -12,7 +12,7 @@ export class AlunoAssinaturaController {
 
             const { assinaturaId } = req.params as any
             const service = new AlunoDetalhesAssinaturaService()
-            const assinatura = await service.execute(assinaturaId)
+            const assinatura = await service.execute({assinaturaId})
             return res.status(201).json(assinatura);
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -39,7 +39,7 @@ export class AlunoAssinaturaController {
         try {
             const alunoId = req.user.id; // Pega o ID do coach autenticado
 
-            const parsedQuery = req.body as AlunoListAssinaturasParams
+            const parsedQuery = req.query as any
 
             const service = new AlunoListAssinaturasService();
 

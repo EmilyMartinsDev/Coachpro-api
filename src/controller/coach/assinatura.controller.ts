@@ -5,6 +5,7 @@ import { DetalhesAssinaturaInputDTO, DetalhesAssinaturaService } from '@/service
 import { EnviarComprovanteAssinaturaService } from '@/service/coach/assinatura/enviar-comprovante-assinatura.service';
 import { ListAssinaturasParams, ListAssinaturasService } from '@/service/coach/assinatura/listar.service';
 import { RejeitarAssinaturaService } from '@/service/coach/assinatura/rejeitar-assinatura.service';
+import { Console } from 'console';
 import { Request, Response } from 'express';
 
 
@@ -13,44 +14,47 @@ export class AssinaturaController {
         try {
 
 
-            const { parcelamentoId, alunoId } = req.body ;
-
+            const { parcelamentoId } = req.body;
+            const {alunoId} = req.params as any
             const service = new CriarAssinaturaService();
 
-            const assinatura = await service.execute(alunoId,parcelamentoId);
+            const assinatura = await service.execute(alunoId, parcelamentoId);
 
             return res.status(201).json(assinatura);
         } catch (error) {
             return res.status(500).json({ error: error.message });
         }
     }
-        async enviarComprovanteAssinatura(req: Request, res: Response) {
-            try {
-    
-                const { assinaturaId } = req.params as any
-        const file = {
-        base64: req.file.buffer.toString('base64'),
-        mimetype: req.file.mimetype,
-        originalname: req.file.originalname,
-    };
-                const service = new EnviarComprovanteAssinaturaService()
-                const assinaturaAprovada = await service.execute({
-                    assinaturaId,
-                    file: file
-                })
-    
-                return res.status(201).json(assinaturaAprovada);
-            } catch (error) {
-                return res.status(500).json({ error: error.message });
-            }
+    async enviarComprovanteAssinatura(req: Request, res: Response) {
+        try {
+
+            const { assinaturaId } = req.params as any
+            const file = {
+                base64: req.file.buffer.toString('base64'),
+                mimetype: req.file.mimetype,
+                originalname: req.file.originalname,
+            };
+            const service = new EnviarComprovanteAssinaturaService()
+            const assinaturaAprovada = await service.execute({
+                assinaturaId,
+                file: file
+            })
+
+            return res.status(201).json(assinaturaAprovada);
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
         }
+    }
 
     async detalhesAssinatura(req: Request, res: Response) {
         try {
 
             const { assinaturaId } = req.params as any
+            console.log(assinaturaId)
             const service = new DetalhesAssinaturaService()
-            const assinatura = await service.execute(assinaturaId)
+            const assinatura = await service.execute({
+                assinaturaId
+            })
             return res.status(201).json(assinatura);
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -85,7 +89,7 @@ export class AssinaturaController {
         try {
             const coachId = req.user.id; // Pega o ID do coach autenticado
 
-            const parsedQuery = req.body() as ListAssinaturasParams
+            const parsedQuery = req.query as any
 
             const service = new ListAssinaturasService();
 

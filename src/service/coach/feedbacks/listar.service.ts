@@ -56,7 +56,13 @@ export class ListarFeedbacksService {
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { createdAt: "desc" },
- 
+        include:{
+          aluno:{
+            select:{
+              nome:true
+            }
+          }
+        }
       })
     ]);
 

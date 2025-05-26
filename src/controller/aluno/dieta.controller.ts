@@ -4,7 +4,7 @@ import { AlunoListarDietaParams, AlunoListarDietaService } from "@/service/aluno
 export class AlunoDietaController {
   async listar(req: Request, res: Response) {
     try {
-      const data = req.body as AlunoListarDietaParams;
+      const data = req.query as any;
       const alunoId = req.user.id;
 
       const service = new AlunoListarDietaService();

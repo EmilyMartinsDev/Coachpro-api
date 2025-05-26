@@ -34,13 +34,10 @@ export class ListarAlunosService {
         orderBy: { [orderBy]: order },
         skip: (page - 1) * pageSize,
         take: pageSize,
-        select: {
-          id: true,
-          nome: true,
-          email: true,
-          telefone: true,
-          dataNascimento: true,
-        },
+        include:{
+          planosAlimentar:true, 
+          planosTreino:true
+        }
       }),
     ]);
 

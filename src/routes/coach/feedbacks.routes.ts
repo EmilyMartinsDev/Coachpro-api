@@ -22,7 +22,7 @@ const controller = new FeedbackController();
 )
 
  feedbackRoutes.patch(
-  '/responder/:feedbackId',
+  '/responder/:feedBackId',
   (req, res) => controller.responderFeedback(req, res)
 );
 

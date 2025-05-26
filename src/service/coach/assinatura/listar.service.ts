@@ -17,7 +17,7 @@ export class ListAssinaturasService {
         coachId
       },
     };
-
+    console.log(search)
     if (status) {
       where.status = status;
     }

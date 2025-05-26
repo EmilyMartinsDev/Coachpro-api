@@ -28,7 +28,7 @@ export class CriarAssinaturaService {
     private async verificarAssinaturasAtivas(alunoId: string) {
         const assinaturaAtiva = await prisma.assinatura.findFirst({
             where: {
-                alunoId,
+                alunoId: alunoId,
                 status: 'ATIVA'
             }
         });

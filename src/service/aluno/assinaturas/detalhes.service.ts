@@ -13,7 +13,11 @@ export class AlunoDetalhesAssinaturaService {
                 id: assinaturaId
             },
             include:{
-                parcelamento: true
+                parcelamento: {
+                    include:{
+                        plano:true
+                    }
+                }
             }
         });
         return assinatura;

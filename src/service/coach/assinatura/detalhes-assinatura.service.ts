@@ -8,12 +8,21 @@ export interface DetalhesAssinaturaInputDTO {
 
 export class DetalhesAssinaturaService {
     async execute({ assinaturaId }: DetalhesAssinaturaInputDTO) {
-        const assinatura = await prisma.assinatura.findFirst({
+        const assinatura = await prisma.assinatura.findUnique({
             where: {
                 id: assinaturaId
             },
             include:{
-                parcelamento:true
+                parcelamento:{
+                    include:{
+                        plano:{
+                            select:{
+                                titulo:true
+                            }
+                        }
+                    }
+                },
+                aluno:true
             }
         });
         return assinatura;

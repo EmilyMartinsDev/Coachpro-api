@@ -4,9 +4,9 @@ import { AlunoListarTreinosParams, AlunoListarTreinosService } from "@/service/a
 export class AlunoTreinoController {
   async listar(req: Request, res: Response) {
     try {
-      const data = req.body as AlunoListarTreinosParams;
+      const data = req.query as any;
       const alunoId = req.user.id;
-
+      console.log(data)
       const service = new AlunoListarTreinosService();
       const dieta = await service.execute({ ...data, alunoId });
 

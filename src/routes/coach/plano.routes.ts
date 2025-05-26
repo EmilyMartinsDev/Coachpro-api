@@ -12,6 +12,10 @@ const  planoRoutes = Router();
 
 const controller = new PlanoController();
  planoRoutes.use(authMiddleware, authorizeRole('COACH'));
+ planoRoutes.get(
+    "/",
+    controller.listarPlanos
+)
 
 
  planoRoutes.post(
