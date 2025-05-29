@@ -3,10 +3,8 @@ import cors from 'cors';
 import morgan from 'morgan';
 import path from 'path';
 import { config } from 'dotenv';
-
-import { errorMiddleware } from './middlewares/error.middleware';
-import routes from './routes/index.routes'
 import { connectDatabase } from './config/database';
+import globalRoutes from './routes';
 
 config();
 
@@ -19,9 +17,7 @@ app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
-app.use('/api', routes);
+app.use('/api', globalRoutes);
 
-// Error handling middleware
-app.use(errorMiddleware);
 
 app.listen(8080, ()=> console.log("servidor rodando!"))

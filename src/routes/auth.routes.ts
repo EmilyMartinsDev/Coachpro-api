@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { authController } from '../controllers/auth.controller';
+import { authController } from '../controller/auth.controller';
 
-const router = Router();
 
-router.post('/login', ...authController.login);
-router.post('/coach/register', ...authController.registerCoach);
-router.post('/aluno/register', ...authController.registerAluno);
+const authRuter = Router();
 
-export default router;
+authRuter.post('/login', ...authController.login);
+authRuter.post('/coach/register', ...authController.registerCoach);
+authRuter.post('/aluno/register', ...authController.registerAluno);
+
+export default authRuter;

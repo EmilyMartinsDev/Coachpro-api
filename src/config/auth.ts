@@ -3,8 +3,12 @@ import jwt from 'jsonwebtoken';
 import { prisma } from './database';
 import { ApiError } from '../utils/apiError';
 import 'dotenv/config';
-const JWT_SECRET = process.env.JWT_SECRET as string;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN as string;
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET não está definido no .env');
+}
 
 const SALT_ROUNDS = 10;
 
@@ -19,33 +23,26 @@ export const comparePassword = async (
   return await bcrypt.compare(password, hashedPassword);
 };
 
-// Função utilitária para converter expiresIn para o tipo aceito pelo jsonwebtoken
-function parseExpiresIn(val: string | undefined): number | undefined {
-  if (!val) return undefined;
-  // Se for número, retorna como número
-  if (!isNaN(Number(val))) return Number(val);
-  // Se for string tipo '7d', '1h', retorna como está
-  return val as any;
-}
 
-export const generateToken = (userId: string, tipo: 'coach' | 'aluno'): string => {
-  const expiresIn = parseExpiresIn(JWT_EXPIRES_IN);
-  const secret: string = JWT_SECRET || 'seu_segredo_jwt';
-  return jwt.sign({ id: userId, tipo }, secret, expiresIn ? { expiresIn } : undefined);
+export const generateToken = (userId: string, role: 'COACH' | 'ALUNO'): string => {
+  return jwt.sign({ id: userId, role }, JWT_SECRET, { 
+    subject: userId,
+    expiresIn:"7d" 
+  });
 };
 
-export const verifyToken = (token: string): { id: string; tipo: 'coach' | 'aluno' } => {
-  return jwt.verify(token, JWT_SECRET) as { id: string; tipo: 'coach' | 'aluno' };
+export const verifyToken = (token: string): { id: string; role: 'COACH' | 'ALUNO' } => {
+  return jwt.verify(token, JWT_SECRET) as { id: string; role: 'COACH' | 'ALUNO' };
 };
 
 export const authenticateUser = async (
   email: string,
   password: string,
-  tipo: 'coach' | 'aluno'
+  role: 'COACH' | 'ALUNO'
 ) => {
   let user;
-  
-  if (tipo === 'coach') {
+
+  if (role === 'COACH') {
     user = await prisma.coach.findUnique({ where: { email } });
   } else {
     user = await prisma.aluno.findUnique({ where: { email } });
@@ -53,6 +50,41 @@ export const authenticateUser = async (
 
   if (!user) {
     throw new ApiError(401, 'Credenciais inválidas');
+  }
+
+  if (role === 'ALUNO') {
+    const assinaturasAtivas = await prisma.assinatura.findMany({
+      where: {
+        alunoId: user.id,
+        status: "ATIVA"
+      }
+    });
+
+    if (!assinaturasAtivas.length) {
+      throw new ApiError(401, 'Assinatura não ativa');
+    }
+
+    const hoje = new Date();
+    const assinaturaValida = assinaturasAtivas.find(a => 
+      a.dataInicio <= hoje && (!a.dataFim || a.dataFim >= hoje)
+    );
+
+    if (!assinaturaValida) {
+      // Atualiza todas as assinaturas que estão fora do período válido
+      await prisma.assinatura.updateMany({
+        where: {
+          id: { in: assinaturasAtivas.map(a => a.id) },
+          OR: [
+            { dataInicio: { gt: hoje } },
+            { dataFim: { lt: hoje } }
+          ]
+        },
+        data: {
+          status: "CANCELADA"
+        }
+      });
+      throw new ApiError(401, 'Assinatura expirada ou não iniciada');
+    }
   }
 
   const isMatch = await comparePassword(password, user.senha);
