@@ -22,7 +22,11 @@ export class AlunoAssinaturaController {
         try {
 
             const { assinaturaId } = req.params as any
-            const {file} = req.body
+                const file = {
+                base64: req.file.buffer.toString('base64'),
+                mimetype: req.file.mimetype,
+                originalname: req.file.originalname,
+            };
             const service = new AlunoEnviarComprovanteAssinaturaService()
             const assinaturaAprovada = await service.execute({
                 assinaturaId,

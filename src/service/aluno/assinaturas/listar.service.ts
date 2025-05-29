@@ -4,7 +4,7 @@ import { prisma } from "@/config/database";
 export interface AlunoListAssinaturasParams {
   page?: number;
   pageSize?: number;
-  status?: "PENDENTE" | "APROVADA" | "CANCELADA";
+ status?: "PENDENTE" | "PENDENTE_APROVACAO" | "CANCELADA" | "ATIVA";
   alunoId?: string;
 }
 

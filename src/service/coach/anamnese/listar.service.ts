@@ -2,12 +2,14 @@ import { prisma } from "@/config/database";
 
 
 export interface ListarAnamnesesParams {
-  alunoId: string;
+  alunoId?: string;
   search?: string;
   page?: number;
   page_size?: number;
   dataInicio?: Date;
   dataFim?: Date;
+  analisado?: boolean
+  coachId: string
 }
 
 export class ListarAnamnesesService {
@@ -19,10 +21,14 @@ export class ListarAnamnesesService {
       page_size = 10,
       dataInicio,
       dataFim,
+      analisado,
+      coachId
     } = params;
 
     const where: any = {
-      alunoId,
+      aluno: {
+        coachId
+      },
     };
 
     if (search) {
@@ -38,6 +44,27 @@ export class ListarAnamnesesService {
         lte: dataFim,
       };
     }
+    if (typeof analisado === 'boolean') {
+      where.AND = [];
+
+      if (analisado == true) {
+        // Só pega se o aluno tiver plano alimentar ou de treino
+        where.AND.push({
+          OR: [
+            { aluno: { planosAlimentar: { some: {} } } },
+            { aluno: { planosTreino: { some: {} } } },
+          ]
+        });
+      } else if(analisado == false) {
+        // Só pega se o aluno NÃO tiver nem plano alimentar nem de treino
+        where.AND.push({
+          AND: [
+            { aluno: { planosAlimentar: { none: {} } } },
+            { aluno: { planosTreino: { none: {} } } },
+          ]
+        });
+      }
+    }
 
     const total = await prisma.anamnese.count({ where });
 
@@ -46,7 +73,7 @@ export class ListarAnamnesesService {
       skip: (page - 1) * page_size,
       take: page_size,
       orderBy: { createdAt: "desc" },
-      include: { aluno: true },
+      include: { aluno: { include: { planosAlimentar: { select: { id: true } }, planosTreino: { select: { id: true } } } } },
     });
 
     return {
@@ -59,4 +86,6 @@ export class ListarAnamnesesService {
       },
     };
   }
+
+
 }

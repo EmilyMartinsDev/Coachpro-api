@@ -9,6 +9,7 @@ export interface CreatePlanoInputDto {
     valorParcela: number;
     quantidadeParcela: number;
   }[];
+
 }
 
 export class CriarPlanoService {

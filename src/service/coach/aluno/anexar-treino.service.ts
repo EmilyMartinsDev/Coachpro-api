@@ -31,7 +31,7 @@ export class AnexarTreinoService {
         coachId,
       },
     });
-
+ 
     return planoTreino;
   }
 }

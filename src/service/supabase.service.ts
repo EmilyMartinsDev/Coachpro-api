@@ -12,7 +12,7 @@ interface UploadFile {
 
 export const uploadFileToSupabase = async (
   file: UploadFile,
-  bucket: 'planos-treino' | 'planos-alimentares' | 'comprovantes' | 'fotos-feedback'
+  bucket: 'planos-treino' | 'planos-alimentares' | 'comprovantes' | 'fotos-feedback' | 'fotos-anamnese'
 ): Promise<string> => {
   const fileExt = file.originalname.split('.').pop() || 
                  (file.mimetype.includes('jpeg') ? 'jpg' : 

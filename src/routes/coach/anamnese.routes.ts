@@ -17,7 +17,10 @@ const controller = new AnamnesesController();
     "/",
     controller.listar
 )
-
+ anamneseRoutes.patch(
+    "/:anamneseId",
+    controller.atualizarAnamnese
+)
  anamneseRoutes.get(
   '/:anamneseId',
   (req, res) => controller.detalhesAnamnese(req, res)

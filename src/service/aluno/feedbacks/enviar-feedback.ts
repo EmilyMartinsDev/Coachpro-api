@@ -44,7 +44,7 @@ export class AlunoEnviarFeedbackService{
                 seguiuPlano,
                 comeuAMais,
                 alunoId,
-                peso,
+                peso: String(peso),
                 horasSono,
                 observacoes,
                 refeicaoLivre,

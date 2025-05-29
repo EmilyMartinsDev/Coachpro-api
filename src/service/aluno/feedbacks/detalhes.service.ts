@@ -7,6 +7,10 @@ export class AlunoDetalhesFeedbackService {
       where: {
         id: feedbackId,
       },
+      include:{
+         aluno:true,
+         fotos:true
+      }
     });
 
     if (!feedback) {

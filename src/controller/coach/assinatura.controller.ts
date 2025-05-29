@@ -78,7 +78,7 @@ export class AssinaturaController {
 
             const { assinaturaId } = req.params as any
             const service = new RejeitarAssinaturaService()
-            const assinaturaReprovada = await service.execute(assinaturaId)
+            const assinaturaReprovada = await service.execute({assinaturaId})
 
             return res.status(201).json(assinaturaReprovada);
         } catch (error) {

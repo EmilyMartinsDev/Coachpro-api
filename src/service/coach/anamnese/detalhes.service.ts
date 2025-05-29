@@ -7,7 +7,7 @@ export class DetalhesAnamneseService {
       where: {
         id: anamneseId,
       },
-      include: { aluno: true },
+      include: { aluno: true, fotos:true },
     });
 
     if (!anamnese) {

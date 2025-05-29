@@ -20,8 +20,8 @@ alunoAssinaturasRouter.get(
     controller.alunoListar
 )
 
-alunoAssinaturasRouter.post(
-  '/:assinaturaId',
+alunoAssinaturasRouter.patch(
+  '/:assinaturaId/comprovante',
   upload.single('file'),
   (req, res) => controller.alunoEnviarComprovanteAssinatura(req, res)
 );

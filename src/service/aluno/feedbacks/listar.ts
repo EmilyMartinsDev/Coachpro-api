@@ -5,7 +5,7 @@ export interface AlunoListarFeedbacksParams {
     alunoId?: string;
     page?: number;
     pageSize?: number;
-    respondido?: boolean;
+    respondido?: any;
     dataInicio?: string;
     dataFim?: string;
 }
@@ -18,7 +18,7 @@ export class AlunoListarFeedbacksService {
             where.alunoId = alunoId;
         }
         if (respondido) {
-            where.respondido = respondido
+            where.respondido = respondido == "true" ? true : false
         }
         if (dataInicio || dataFim) {
             where.createdAt = {};
@@ -36,6 +36,11 @@ export class AlunoListarFeedbacksService {
                 skip: (page - 1) * pageSize,
                 take: pageSize,
                 orderBy: { createdAt: "desc" },
+                include:{
+                    aluno:true,
+                    fotos:true
+                }
+            
             }),
         ]);
 
